@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>E-Commerce Microservices Architecture Diagram - CLD 376</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background: #f8fafc; color: #1e293b; padding: 30px; display: flex; flex-direction: column; align-items: center; }
+    .header { text-align: center; margin-bottom: 25px; }
+    .header h1 { font-size: 26px; color: #0f172a; margin-bottom: 6px; }
+    .header p { font-size: 14px; color: #64748b; }
+    
+    .canvas {
+      width: 1100px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      position: relative;
+    }
+
+    .row { display: flex; justify-content: center; align-items: center; margin-bottom: 24px; position: relative; }
+
+    /* Client Node */
+    .client-box {
+      background: #eff6ff; border: 2px solid #3b82f6; border-radius: 10px;
+      padding: 12px 24px; font-weight: 600; color: #1d4ed8; text-align: center;
+      box-shadow: 0 2px 8px rgba(59,130,246,0.15);
+    }
+
+    /* Arrow down */
+    .arrow-down {
+      width: 2px; height: 26px; background: #94a3b8; margin: 0 auto 12px auto; position: relative;
+    }
+    .arrow-down::after {
+      content: ''; position: absolute; bottom: 0; left: -4px;
+      border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #94a3b8;
+    }
+
+    /* Ingress / DNS box */
+    .ingress-box {
+      width: 100%; background: #f0fdf4; border: 2px dashed #22c55e; border-radius: 10px;
+      padding: 16px; text-align: center; margin-bottom: 20px;
+    }
+    .ingress-title { font-weight: 700; color: #15803d; font-size: 16px; margin-bottom: 4px; }
+    .ingress-sub { font-size: 13px; color: #166534; }
+
+    /* K8s cluster outer frame */
+    .k8s-cluster {
+      border: 2px solid #3b82f6; border-radius: 12px; background: #f8fafc;
+      padding: 24px; margin-bottom: 24px; position: relative;
+    }
+    .k8s-badge {
+      position: absolute; top: -14px; left: 24px; background: #3b82f6; color: white;
+      padding: 4px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; letter-spacing: 0.5px;
+    }
+
+    .pods-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+    .pod-card {
+      background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px;
+      padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .pod-title {
+      font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;
+    }
+    .pod-tag { background: #e0e7ff; color: #3730a3; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+
+    .service-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; margin-bottom: 8px; border-radius: 6px;
+      background: #f8fafc; border: 1px solid #e2e8f0; font-size: 13px;
+    }
+    .service-item:last-child { margin-bottom: 0; }
+    .svc-name { font-weight: 600; color: #334155; }
+    .svc-port { background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 11px; }
+
+    /* Volume box */
+    .volume-box {
+      background: #fffbeb; border: 1.5px dashed #f59e0b; border-radius: 8px;
+      padding: 12px; text-align: center; font-size: 13px; color: #b45309; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+
+    /* Database section */
+    .db-box {
+      background: #fdf4ff; border: 2px solid #a855f7; border-radius: 10px;
+      padding: 18px 24px; text-align: center;
+      display: flex; justify-content: space-around; align-items: center;
+      box-shadow: 0 2px 8px rgba(168,85,247,0.12);
+    }
+    .db-info { text-align: left; }
+    .db-title { font-weight: 700; color: #7e22ce; font-size: 16px; margin-bottom: 4px; }
+    .db-sub { font-size: 12px; color: #6b21a8; }
+    .db-collections { display: flex; gap: 12px; }
+    .collection-pill {
+      background: #faf5ff; border: 1px solid #d8b4fe; border-radius: 6px;
+      padding: 6px 12px; font-size: 12px; color: #6b21a8; font-weight: 500;
+    }
+
+    .table-container { margin-top: 25px; width: 100%; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    th { background: #f1f5f9; color: #475569; padding: 8px 12px; font-weight: 600; border-bottom: 1px solid #cbd5e1; }
+    td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+    code { font-family: monospace; background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>E-Commerce Microservices Architecture</h1>
+    <p>Course: CLD 376 – Cloud Native Development | American University of Phnom Penh</p>
+  </div>
+
+  <div class="canvas">
+    
+    <!-- Client Layer -->
+    <div class="row">
+      <div class="client-box">
+        🌐 Client / User Interface<br>
+        <span style="font-size: 12px; font-weight: normal; color: #64748b;">Postman / Web Browser</span>
+      </div>
+    </div>
+
+    <div class="arrow-down"></div>
+
+    <!-- Ingress / DNS Layer -->
+    <div class="ingress-box">
+      <div class="ingress-title">🔀 NGINX Ingress Controller & Fanout DNS</div>
+      <div class="ingress-sub">Domain: <b>http://aupp.com</b> | Fanout Routes: <code>/</code>, <code>/register</code>, <code>/login</code>, <code>/products</code>, <code>/orders</code></div>
+    </div>
+
+    <div class="arrow-down"></div>
+
+    <!-- Kubernetes Cluster Frame -->
+    <div class="k8s-cluster">
+      <div class="k8s-badge">☸️ KUBERNETES CLUSTER (MINIKUBE)</div>
+
+      <div class="pods-container">
+        <!-- Pod 1 -->
+        <div class="pod-card">
+          <div class="pod-title">
+            <span>📦 Pod 1: Gateway & Authentication</span>
+            <span class="pod-tag">Multi-Container</span>
+          </div>
+
+          <div class="service-item" style="border-left: 4px solid #3b82f6;">
+            <div>
+              <div class="svc-name">1. API Gateway (Entrypoint)</div>
+              <div style="font-size: 11px; color: #64748b;">Request routing & reverse proxy</div>
+            </div>
+            <span class="svc-port">Port: 5000</span>
+          </div>
+
+          <div class="service-item">
+            <div>
+              <div class="svc-name">2. Register Service</div>
+              <div style="font-size: 11px; color: #64748b;">User onboarding & password hashing</div>
+            </div>
+            <span class="svc-port">Port: 5003</span>
+          </div>
+
+          <div class="service-item">
+            <div>
+              <div class="svc-name">3. Login Service</div>
+              <div style="font-size: 11px; color: #64748b;">User authentication & JWT generation</div>
+            </div>
+            <span class="svc-port">Port: 5002</span>
+          </div>
+
+          <div class="service-item">
+            <div>
+              <div class="svc-name">4. Auth Service</div>
+              <div style="font-size: 11px; color: #64748b;">Token verification & profile fetching</div>
+            </div>
+            <span class="svc-port">Port: 5001</span>
+          </div>
+        </div>
+
+        <!-- Pod 2 -->
+        <div class="pod-card">
+          <div class="pod-title">
+            <span>📦 Pod 2: Business Logic Microservices</span>
+            <span class="pod-tag">Multi-Container</span>
+          </div>
+
+          <div class="service-item" style="border-left: 4px solid #10b981;">
+            <div>
+              <div class="svc-name">5. Product Service</div>
+              <div style="font-size: 11px; color: #64748b;">Product catalog management (CRUD)</div>
+            </div>
+            <span class="svc-port">Port: 5005</span>
+          </div>
+
+          <div class="service-item" style="border-left: 4px solid #f59e0b;">
+            <div>
+              <div class="svc-name">6. Order Service</div>
+              <div style="font-size: 11px; color: #64748b;">Shopping cart & order processing</div>
+            </div>
+            <span class="svc-port">Port: 5004</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shared Volume -->
+      <div class="volume-box">
+        💾 Kubernetes Shared Volume (emptyDir): Mount Path <code>/var/log/ecommerce</code> for Centralized Logging
+      </div>
+    </div>
+
+    <div class="arrow-down"></div>
+
+    <!-- Database Layer -->
+    <div class="db-box">
+      <div class="db-info">
+        <div class="db-title">☁️ MongoDB Atlas (Cloud Database)</div>
+        <div class="db-sub">Cluster: <code>cluster0.oxcbzu5.mongodb.net</code> | Database: <code>ecommerce_final</code></div>
+      </div>
+      <div class="db-collections">
+        <div class="collection-pill">📁 users</div>
+        <div class="collection-pill">📁 products</div>
+        <div class="collection-pill">📁 orders</div>
+      </div>
+    </div>
+
+    <!-- Endpoints table -->
+    <div class="table-container">
+      <h3 style="font-size: 15px; margin-bottom: 10px; color: #0f172a;">API Routing Matrix (Through API Gateway: <code>http://aupp.com</code>)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Microservice</th>
+            <th>Target Port</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>POST</code></td><td><code>/register</code></td><td>Register Service</td><td><code>:5003</code></td><td>Register new user account with hashed password</td></tr>
+          <tr><td><code>POST</code></td><td><code>/login</code></td><td>Login Service</td><td><code>:5002</code></td><td>Authenticate user credentials & issue JWT</td></tr>
+          <tr><td><code>POST</code></td><td><code>/auth/verify</code></td><td>Auth Service</td><td><code>:5001</code></td><td>Verify active JWT authorization token</td></tr>
+          <tr><td><code>GET</code></td><td><code>/auth/profile</code></td><td>Auth Service</td><td><code>:5001</code></td><td>Fetch authenticated user profile details</td></tr>
+          <tr><td><code>GET/POST</code></td><td><code>/products</code></td><td>Product Service</td><td><code>:5005</code></td><td>List products or create a new product item</td></tr>
+          <tr><td><code>GET/PUT/DEL</code></td><td><code>/products/:id</code></td><td>Product Service</td><td><code>:5005</code></td><td>Retrieve, update or delete product by ID</td></tr>
+          <tr><td><code>GET/POST</code></td><td><code>/orders</code></td><td>Order Service</td><td><code>:5004</code></td><td>View customer orders or place a new order</td></tr>
+          <tr><td><code>PUT/DEL</code></td><td><code>/orders/:id</code></td><td>Order Service</td><td><code>:5004</code></td><td>Update status (shipped) or cancel order</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</body>
+</html>
