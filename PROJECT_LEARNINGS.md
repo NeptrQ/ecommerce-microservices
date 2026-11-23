@@ -78,6 +78,8 @@ docker compose logs --tail=50 api-gateway
 
 Kubernetes Service ports and container ports can differ. The gateway Service listens on port `5011` and forwards to the gateway container's port `5000`. The Ingress backend must reference the Service port, `5011`.
 
+Each service writes request summaries to `/shared-logs/<service-name>.log`. Its Deployment mounts an `emptyDir` volume into both the application container and a `log-reader` sidecar. The sidecar tails the file and exposes it through `kubectl logs -c log-reader`. An `emptyDir` is shared only by containers in the same Pod; it is temporary and is not shared across replicas.
+
 ## 6. Building and loading images into Minikube
 
 Minikube may use its own container image store. Building an image on the host does not always make it available to Kubernetes automatically. Build the images, tag the gateway with the name used by its Deployment, and load all images into Minikube:

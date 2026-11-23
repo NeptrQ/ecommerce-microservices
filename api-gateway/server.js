@@ -4,6 +4,7 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const requestLogger = require('../utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 5011;
@@ -12,7 +13,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET is required');
 }
-
 // Service URLs - when in same pod, use localhost; cross-pod use K8s service name
 const REGISTER_URL  = process.env.REGISTER_URL  || 'http://localhost:5003';
 const LOGIN_URL     = process.env.LOGIN_URL      || 'http://localhost:5002';
@@ -22,6 +22,7 @@ const PRODUCT_URL   = process.env.PRODUCT_URL    || 'http://product-service:5005
 
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger('gateway'));
 
 const authenticate = (req, res, next) => {
   const match = /^Bearer\s+(\S+)$/i.exec(req.headers.authorization || '');

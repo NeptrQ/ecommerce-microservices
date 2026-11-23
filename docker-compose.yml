@@ -18,8 +18,8 @@ services:
 
   auth-service:
     build:
-      context: ./auth-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: auth-service/Dockerfile
     container_name: ecommerce_auth
     restart: unless-stopped
     environment:
@@ -34,8 +34,8 @@ services:
 
   login-service:
     build:
-      context: ./login-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: login-service/Dockerfile
     container_name: ecommerce_login
     restart: unless-stopped
     environment:
@@ -50,8 +50,8 @@ services:
 
   register-service:
     build:
-      context: ./register-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: register-service/Dockerfile
     container_name: ecommerce_register
     restart: unless-stopped
     environment:
@@ -65,8 +65,8 @@ services:
 
   order-service:
     build:
-      context: ./order-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: order-service/Dockerfile
     container_name: ecommerce_order
     restart: unless-stopped
     environment:
@@ -81,8 +81,8 @@ services:
 
   product-service:
     build:
-      context: ./product-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: product-service/Dockerfile
     container_name: ecommerce_product
     restart: unless-stopped
     environment:
@@ -97,8 +97,8 @@ services:
 
   api-gateway:
     build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api-gateway/Dockerfile
     container_name: ecommerce_gateway
     restart: unless-stopped
     environment:

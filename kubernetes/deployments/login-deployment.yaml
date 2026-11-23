@@ -25,6 +25,8 @@ spec:
               value: production
             - name: PORT
               value: "5002"
+            - name: LOG_DIR
+              value: /shared-logs
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
@@ -35,6 +37,9 @@ spec:
                 secretKeyRef:
                   name: ecommerce-secret
                   key: JWT_SECRET
+          volumeMounts:
+            - name: shared-logs
+              mountPath: /shared-logs
           readinessProbe:
             httpGet:
               path: /health
@@ -43,3 +48,21 @@ spec:
             httpGet:
               path: /health
               port: http
+        - name: log-reader
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              while [ ! -f /shared-logs/login-service.log ]; do
+                sleep 1
+              done
+              tail -F /shared-logs/login-service.log
+          volumeMounts:
+            - name: shared-logs
+              mountPath: /shared-logs
+              readOnly: true
+      volumes:
+        - name: shared-logs
+          emptyDir: {}

@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const jwt      = require('jsonwebtoken');
 const cors     = require('cors');
 const dns      = require('dns');
+const requestLogger = require('../utils/logger');
 
 try { dns.setServers(['8.8.8.8', '8.8.4.4']); } catch (e) {}
 
@@ -35,6 +36,7 @@ const Product = mongoose.model('Product', productSchema);
 
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger('product-service'));
 
 const authenticate = (req, res, next) => {
   const match = /^Bearer\s+(\S+)$/i.exec(req.headers.authorization || '');

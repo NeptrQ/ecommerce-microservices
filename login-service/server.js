@@ -6,6 +6,7 @@ const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
 const cors     = require('cors');
 const dns      = require('dns');
+const requestLogger = require('../utils/logger');
 
 try { dns.setServers(['8.8.8.8', '8.8.4.4']); } catch (e) {}
 
@@ -30,6 +31,7 @@ const User = mongoose.model('User', userSchema);
 
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger('login-service'));
 
 // POST /login  —  Authenticate user and return JWT
 app.post('/login', async (req, res) => {

@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const jwt      = require('jsonwebtoken');
 const cors     = require('cors');
 const dns      = require('dns');
+const requestLogger = require('../utils/logger');
 
 try { dns.setServers(['8.8.8.8', '8.8.4.4']); } catch (e) {}
 
@@ -29,6 +30,7 @@ const User = mongoose.model('User', userSchema);
 
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger('auth-service'));
 
 // Middleware: verify JWT from Authorization header
 const verifyToken = (req, res, next) => {

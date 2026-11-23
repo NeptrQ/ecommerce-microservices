@@ -2,10 +2,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY order-service/package*.json ./
 RUN npm ci --omit=dev
 
-COPY server.js ./
+COPY order-service/server.js ./
+COPY utils/logger.js /utils/logger.js
 
 ENV NODE_ENV=production
 EXPOSE 5004

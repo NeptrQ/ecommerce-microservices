@@ -7,6 +7,7 @@ metadata:
 data:
   NODE_ENV: "production"
   PORT: "5000"
+  LOG_DIR: "/shared-logs"
   AUTH_URL: "http://auth-service:5001"
   LOGIN_URL: "http://login-service:5002"
   REGISTER_URL: "http://register-service:5003"
