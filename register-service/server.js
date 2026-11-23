@@ -33,7 +33,7 @@ app.use(express.json());
 // POST /register  —  Create a new user account
 app.post('/register', async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
     if (!name || !email || !password)
       return res.status(400).json({ error: 'name, email and password are required' });
 
@@ -42,7 +42,7 @@ app.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'Email already registered' });
 
     const hashed = await bcrypt.hash(password, 10);
-    const user   = await User.create({ name, email, password: hashed, role: role || 'customer' });
+    const user   = await User.create({ name, email, password: hashed });
 
     res.status(201).json({
       message: 'User registered successfully',

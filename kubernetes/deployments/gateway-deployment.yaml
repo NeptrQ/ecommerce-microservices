@@ -29,4 +29,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: ecommerce-config
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secret
+                  key: JWT_SECRET
 

@@ -47,7 +47,7 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid password' });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
+      { id: user._id, name: user.name, email: user.email, role: user.role },
       JWT_SECRET,
       { expiresIn: '24h' }
     );

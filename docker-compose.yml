@@ -72,6 +72,7 @@ services:
     environment:
       PORT: 5004
       MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -87,6 +88,7 @@ services:
     environment:
       PORT: 5005
       MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -106,6 +108,7 @@ services:
       REGISTER_URL: http://register-service:5003
       ORDER_URL: http://order-service:5004
       PRODUCT_URL: http://product-service:5005
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
     depends_on:
       - auth-service
       - login-service

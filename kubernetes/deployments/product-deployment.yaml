@@ -30,6 +30,11 @@ spec:
                 secretKeyRef:
                   name: ecommerce-secret
                   key: MONGO_URI
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secret
+                  key: JWT_SECRET
           readinessProbe:
             httpGet:
               path: /health
