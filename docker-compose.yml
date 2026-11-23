@@ -24,7 +24,7 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5001
-      MONGO_URI: mongodb://mongodb:27017/ecommerce
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
       JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
     depends_on:
       mongodb:
@@ -40,7 +40,7 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5002
-      MONGO_URI: mongodb://mongodb:27017/ecommerce
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
       JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
     depends_on:
       mongodb:
@@ -56,7 +56,7 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5003
-      MONGO_URI: mongodb://mongodb:27017/ecommerce
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -71,7 +71,7 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5004
-      MONGO_URI: mongodb://mongodb:27017/ecommerce
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -86,7 +86,7 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5005
-      MONGO_URI: mongodb://mongodb:27017/ecommerce
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
     depends_on:
       mongodb:
         condition: service_healthy

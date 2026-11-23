@@ -1,0 +1,23 @@
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ecommerce-ingress
+  namespace: ecommerce
+
+spec:
+  ingressClassName: nginx
+
+  rules:
+    - host: ecommerce.com
+
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+
+            backend:
+              service:
+                name: gateway-service
+                port:
+                  number: 5011

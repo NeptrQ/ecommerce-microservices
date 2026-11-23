@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+kubernetes/secret.yaml
 .DS_Store
 *.log
 PROJECT_DOCUMENTATION.md
