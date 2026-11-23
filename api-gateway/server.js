@@ -1,9 +1,11 @@
+require('dotenv').config();
+
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5006;
 
 // Service URLs - when in same pod, use localhost; cross-pod use K8s service name
 const REGISTER_URL  = process.env.REGISTER_URL  || 'http://localhost:5003';

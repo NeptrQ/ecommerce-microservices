@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express  = require('express');
 const mongoose = require('mongoose');
 const cors     = require('cors');
@@ -7,8 +9,7 @@ try { dns.setServers(['8.8.8.8', '8.8.4.4']); } catch (e) {}
 
 const app  = express();
 const PORT = process.env.PORT || 5005;
-const MONGO_URI = process.env.MONGO_URI ||
-  'mongodb+srv://b80954643_db_user:Boyd1209@cluster0.oxcbzu5.mongodb.net/ecommerce_final?retryWrites=true&w=majority&appName=Cluster0';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/ecommerce';
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Product Service connected to MongoDB'))

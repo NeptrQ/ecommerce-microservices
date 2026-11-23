@@ -1,0 +1,119 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: ecommerce_mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: ecommerce
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_auth
+    restart: unless-stopped
+    environment:
+      PORT: 5001
+      MONGO_URI: mongodb://mongodb:27017/ecommerce
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+
+  login-service:
+    build:
+      context: ./login-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_login
+    restart: unless-stopped
+    environment:
+      PORT: 5002
+      MONGO_URI: mongodb://mongodb:27017/ecommerce
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "5002:5002"
+
+  register-service:
+    build:
+      context: ./register-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_register
+    restart: unless-stopped
+    environment:
+      PORT: 5003
+      MONGO_URI: mongodb://mongodb:27017/ecommerce
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "5003:5003"
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_order
+    restart: unless-stopped
+    environment:
+      PORT: 5004
+      MONGO_URI: mongodb://mongodb:27017/ecommerce
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "5004:5004"
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_product
+    restart: unless-stopped
+    environment:
+      PORT: 5005
+      MONGO_URI: mongodb://mongodb:27017/ecommerce
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "5005:5005"
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: ecommerce_gateway
+    restart: unless-stopped
+    environment:
+      PORT: 5000
+      AUTH_URL: http://auth-service:5001
+      LOGIN_URL: http://login-service:5002
+      REGISTER_URL: http://register-service:5003
+      ORDER_URL: http://order-service:5004
+      PRODUCT_URL: http://product-service:5005
+    depends_on:
+      - auth-service
+      - login-service
+      - register-service
+      - order-service
+      - product-service
+    ports:
+      - "${GATEWAY_HOST_PORT:-5011}:5000"
+
+volumes:
+  mongodb-data:
