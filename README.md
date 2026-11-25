@@ -34,20 +34,21 @@ Based on the architecture flowchart:
 
 ## Option 1: Quick Setup (Docker Compose)
 
-> **Prerequisites:** Docker Desktop (or Docker Engine + Compose).
+> **Prerequisites:** Docker Desktop (or Docker Engine + Compose) and a cloud **MongoDB Atlas** cluster.
 
 1. **Create `.env` from the example file:**
    ```bash
    cp .env.example .env
    ```
-   Edit `.env` and set a `JWT_SECRET`.
-   - For **MongoDB Atlas**, keep `MONGO_URI=mongodb+srv://<user>:<password>@<cluster>/<database>` filled in with your Atlas URI.
-   - To use the **local MongoDB container** included in `docker-compose.yml`, remove or comment out `MONGO_URI` in `.env` (it defaults to `mongodb://mongodb:27017/ecommerce`).
+   Edit `.env` and fill in:
+   - `JWT_SECRET` — a long random secret for signing JWTs.
+   - `MONGO_URI` — your cloud MongoDB Atlas connection string (`mongodb+srv://<user>:<password>@<cluster>/<database>`).
 
 2. **Build and start all services:**
    ```bash
    docker compose up -d --build
    ```
+   Only the **API Gateway** is exposed on the host (`http://localhost:5011`); individual microservices are reachable only on the internal Docker network.
 
 3. **Verify:**
    ```bash
@@ -82,25 +83,23 @@ minikube image load \
   ecommerce-microservices-product-service:latest
 ```
 
-### 3. Create the Namespace and Secret
-```bash
-kubectl apply -f kubernetes/namespace.yaml
+### 3. Prepare the Secret YAML (YAML-only deployment)
+Copy the example Secret manifest to `kubernetes/secret.yaml` (git-ignored) and replace the placeholder `MONGO_URI` (MongoDB Atlas) and `JWT_SECRET`:
 
-kubectl create secret generic ecommerce-secret \
-  -n ecommerce \
-  --from-literal=MONGO_URI="mongodb+srv://<username>:<password>@<cluster-host>/<database>" \
-  --from-literal=JWT_SECRET="replace-with-a-long-random-secret"
+```bash
+cp kubernetes/secret.yaml.example kubernetes/secret.yaml
 ```
 
 ### 4. Deploy all Kubernetes manifests
 ```bash
+kubectl apply -f kubernetes/namespace.yaml
 kubectl apply -R -f kubernetes
 kubectl wait --for=condition=available deployment --all -n ecommerce --timeout=180s
 kubectl get pods,services,ingress -n ecommerce
 ```
 
-### 5. Expose Ingress locally and test
-`kubernetes/nginx/ingress.yaml` uses the host `ecommerce.com` (change `host` there if you prefer `zapp.com` as shown in the flowchart).
+### 5. Expose Fanout DNS Ingress locally and verify shared Volumes
+`kubernetes/nginx/ingress.yaml` configures Fanout DNS for `ecommerce.com` (`/health`, `/register`, `/login`, `/auth`, `/products`, `/orders`, `/`), routing all traffic through `gateway-service:5011` (all backend microservice Services are `ClusterIP` with no direct client access).
 
 1. Add this line to your hosts file (`/etc/hosts` on macOS/Linux, or `C:\Windows\System32\drivers\etc\hosts` on Windows):
    ```text
@@ -112,10 +111,16 @@ kubectl get pods,services,ingress -n ecommerce
    kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80
    ```
 
-3. In another terminal, test the gateway and check sidecar logs:
+3. In another terminal, test the gateway and verify that both containers in a Pod access the shared `/shared-logs` volume:
    ```bash
    curl http://ecommerce.com:8080/health
-   kubectl logs deployment/auth-service -n ecommerce -c log-reader
+   curl http://ecommerce.com:8080/products
+
+   # Read from the main application container
+   kubectl exec deployment/product-service -n ecommerce -c product-service -- cat /shared-logs/product-service.log
+
+   # Read the same file from the BusyBox log-reader sidecar container
+   kubectl logs deployment/product-service -n ecommerce -c log-reader
    ```
 
 ---

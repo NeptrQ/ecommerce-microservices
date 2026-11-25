@@ -14,7 +14,7 @@ Each service runs as its own Node.js process. The API gateway accepts client req
 | Register service | 5003 | Creates user accounts |
 | Order service | 5004 | Manages orders |
 | Product service | 5005 | Manages products |
-| MongoDB | 27017 locally | Database when using the Compose MongoDB container |
+| MongoDB Atlas | Cloud (`mongodb+srv://`) | Managed cloud database used by all backend services |
 
 The gateway uses environment variables such as `AUTH_URL` and `PRODUCT_URL` to find backend services. The same application can therefore use localhost URLs for local development and Kubernetes Service DNS names when deployed in a cluster.
 
@@ -53,9 +53,9 @@ Each service has its own Dockerfile. A typical Node.js image:
 
 ## 4. Docker Compose networking
 
-Compose starts the gateway, backend services, and MongoDB together. Services on the Compose network find each other by Compose service name, for example `http://auth-service:5001`; `localhost` inside a container refers to that container, not another service.
+Compose starts the gateway and backend services together, connecting them to the cloud MongoDB Atlas database configured in `.env`. Services on the Compose network find each other by Compose service name, for example `http://auth-service:5001`; `localhost` inside a container refers to that container, not another service.
 
-The gateway listens on container port `5000`. Compose maps it to host port `5011`, so the local gateway URL is `http://localhost:5011`.
+The gateway listens on container port `5000`. Compose maps it to host port `5011`, so the local gateway URL is `http://localhost:5011`, while backend services remain unexposed on the host so all client traffic passes through the API gateway.
 
 Useful commands:
 
@@ -100,7 +100,7 @@ minikube image load toritoru/gateway:latest \
 
 ## 7. Deploying and checking the Kubernetes application
 
-Apply the Namespace first, then the remaining manifests. The local Secret manifest is Git-ignored and must exist with valid values.
+Apply the Namespace first, then copy `kubernetes/secret.yaml.example` to `kubernetes/secret.yaml` (Git-ignored) with valid `MONGO_URI` and `JWT_SECRET` values, and apply the remaining YAML manifests:
 
 ```bash
 minikube start

@@ -1,21 +1,4 @@
 services:
-  mongodb:
-    image: mongo:7
-    container_name: ecommerce_mongodb
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_DATABASE: ecommerce
-    volumes:
-      - mongodb-data:/data/db
-    ports:
-      - "27017:27017"
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   auth-service:
     build:
       context: .
@@ -24,13 +7,8 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5001
-      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
-      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    ports:
-      - "5001:5001"
+      MONGO_URI: ${MONGO_URI:?set MONGO_URI in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
 
   login-service:
     build:
@@ -40,13 +18,8 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5002
-      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
-      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    ports:
-      - "5002:5002"
+      MONGO_URI: ${MONGO_URI:?set MONGO_URI in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
 
   register-service:
     build:
@@ -56,12 +29,7 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5003
-      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    ports:
-      - "5003:5003"
+      MONGO_URI: ${MONGO_URI:?set MONGO_URI in .env}
 
   order-service:
     build:
@@ -71,13 +39,8 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5004
-      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
+      MONGO_URI: ${MONGO_URI:?set MONGO_URI in .env}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    ports:
-      - "5004:5004"
 
   product-service:
     build:
@@ -87,13 +50,8 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5005
-      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/ecommerce}
+      MONGO_URI: ${MONGO_URI:?set MONGO_URI in .env}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    ports:
-      - "5005:5005"
 
   api-gateway:
     build:
@@ -117,6 +75,3 @@ services:
       - product-service
     ports:
       - "${GATEWAY_HOST_PORT:-5011}:5000"
-
-volumes:
-  mongodb-data:
