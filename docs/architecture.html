@@ -1,0 +1,190 @@
+<title>E-Commerce Microservices Architecture</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one wide top-to-bottom diagram, short reference notes below it */
+:root {
+  --bg: #f6f7fa; --fg: #1c2230; --muted: #5a6373; --line: #b9c1ce;
+  --box: #ffffff; --cluster: #ecf0f6; --log: #a8650f; --log-fill: #fcf1df;
+  --db: #6a3fa0; --db-fill: #f1eafa;
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11151c; --fg: #e3e7ee; --muted: #9aa3b2; --line: #3d4656;
+  --box: #19202a; --cluster: #151b24; --log: #f0b24a; --log-fill: #2d2414;
+  --db: #c3a2f0; --db-fill: #231a31; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11151c; --fg: #e3e7ee; --muted: #9aa3b2; --line: #3d4656;
+  --box: #19202a; --cluster: #151b24; --log: #f0b24a; --log-fill: #2d2414;
+  --db: #c3a2f0; --db-fill: #231a31; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--body); line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 48px; }
+main { max-width: 1240px; margin: 0 auto; display: grid; gap: 28px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: 1.9rem; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.15rem; margin: 0 0 8px; }
+.lede { color: var(--muted); max-width: 68ch; margin: 6px 0 0; }
+figure { margin: 0; }
+.scroll { overflow-x: auto; background: var(--box); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+svg { display: block; width: 100%; min-width: 980px; height: auto; color: var(--fg); }
+figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 10px; max-width: 80ch; }
+code { font-family: var(--mono); font-size: 0.88em; }
+pre { font-family: var(--mono); font-size: 0.85rem; background: var(--box); border: 1px solid var(--line);
+  border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 8px 0 0; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+.notes > section { min-width: 0; }
+.notes ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+.k-log { color: var(--log); font-weight: 600; }
+
+/* SVG classes (styled from page tokens) */
+.cluster { fill: var(--cluster); stroke: var(--line); stroke-dasharray: 6 4; }
+.boxx { fill: var(--box); stroke: var(--fg); stroke-width: 1.2; }
+.grp { fill: none; stroke: var(--line); stroke-width: 1.2; }
+.side { fill: var(--box); stroke: var(--muted); stroke-dasharray: 4 3; }
+.note { fill: var(--box); stroke: var(--muted); stroke-dasharray: 3 3; }
+.vol { fill: var(--log-fill); stroke: var(--log); stroke-width: 1.4; }
+.db { fill: var(--db-fill); stroke: var(--db); stroke-width: 1.4; }
+.edge { fill: none; stroke: var(--fg); stroke-width: 1.3; }
+.edge-log { fill: none; stroke: var(--log); stroke-width: 1.6; }
+.edge-db { fill: none; stroke: var(--db); stroke-width: 1.2; }
+.mk { fill: var(--fg); } .mk-log { fill: var(--log); } .mk-db { fill: var(--db); }
+.t { fill: var(--fg); font: 500 12px var(--mono); }
+.tb { fill: var(--fg); font: 600 12.5px var(--display); }
+.ts { fill: var(--muted); font: 400 10.5px var(--mono); }
+.tl { fill: var(--log); font: 600 10.5px var(--mono); }
+.td { fill: var(--db); font: 600 10.5px var(--mono); }
+.th { fill: var(--muted); font: 600 11px var(--body); letter-spacing: 0.06em; text-transform: uppercase; }
+</style>
+
+<main>
+  <header>
+    <h1>E-Commerce Microservices on Kubernetes</h1>
+    <p class="lede">How a request travels from the client to MongoDB Atlas, and how every pod writes its request log to its own <code>/shared-logs</code> volume for a BusyBox sidecar to read. Taken from the manifests in <code>kubernetes/</code> and the service code.</p>
+  </header>
+
+  <figure>
+    <div class="scroll">
+      <svg id="arch" viewBox="0 0 1200 935" role="img"
+        aria-label="Client resolves ecommerce.com via /etc/hosts to Minikube, NGINX Ingress sends all traffic to gateway-service, the API Gateway checks JWTs and routes to five service pods. Each pod, including the gateway, has its own emptyDir volume at /shared-logs: the app appends to a .log file and a BusyBox log-reader sidecar tails it. All five services talk to MongoDB Atlas.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="ah-log" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-log" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="ah-db" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-db" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+      </svg>
+    </div>
+    <figcaption>Amber marks the logging path. Each <code>emptyDir</code> belongs to one pod: it is created with the pod, shared only by the containers in that pod, and deleted with it. Nothing is shared across pods.</figcaption>
+  </figure>
+
+  <div class="notes">
+    <section>
+      <h2>How the logs flow</h2>
+      <ul>
+        <li><code>utils/logger.js</code> runs as Express middleware in every service. When a response finishes it builds one line: time, service, method, path, status, duration.</li>
+        <li>It prints that line to stdout and <span class="k-log">appends</span> it to <code>$LOG_DIR/&lt;service&gt;.log</code>, where <code>LOG_DIR=/shared-logs</code>.</li>
+        <li>The <code>log-reader</code> sidecar mounts the same volume <strong>read-only</strong>, waits for the file to appear, then runs <code>tail -F</code> on it.</li>
+        <li>The gateway runs 2 replicas, so there are 2 separate <code>gateway.log</code> files, one in each gateway pod.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Read the logs</h2>
+      <pre>kubectl logs -n ecommerce deploy/auth-service -c log-reader -f
+
+kubectl exec -n ecommerce deploy/auth-service \
+  -c auth-service -- cat /shared-logs/auth-service.log</pre>
+    </section>
+    <section>
+      <h2>Request path</h2>
+      <ul>
+        <li><code>ecommerce.com</code> resolves through your <code>/etc/hosts</code> entry, not a DNS server.</li>
+        <li>The Ingress has one rule, <code>/</code> → <code>gateway-service:5011</code>. The API Gateway does the per-path routing.</li>
+        <li>The gateway checks the JWT (and the admin role for product writes and order updates) before forwarding. Order and Product check the JWT again.</li>
+      </ul>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  const svg = document.getElementById('arch');
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const R = (x, y, w, h, c, r = 6) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" class="${c}"/>`;
+  const T = (x, y, s, c = 't', a = 'middle') => `<text x="${x}" y="${y}" class="${c}" text-anchor="${a}">${esc(s)}</text>`;
+  const E = (d, kind = '') => `<path d="${d}" class="edge${kind ? '-' + kind : ''}" marker-end="url(#ah${kind ? '-' + kind : ''})"/>`;
+  const L = d => `<path d="${d}" class="edge"/>`;
+  const CYL = (cx, top, w, h, c, ry = 6) => {
+    const x = cx - w / 2;
+    return `<path class="${c}" d="M${x},${top} v${h} a${w / 2},${ry} 0 0 0 ${w},0 v${-h}"/>` +
+           `<ellipse class="${c}" cx="${cx}" cy="${top}" rx="${w / 2}" ry="${ry}"/>`;
+  };
+
+  let s = '';
+
+  // Outside the cluster
+  s += R(500, 14, 200, 32, 'boxx') + T(600, 35, 'Client (browser / Postman)');
+  s += E('M600,46 V62');
+  s += R(420, 64, 360, 36, 'note') + T(600, 87, '/etc/hosts:  ecommerce.com → $(minikube ip)');
+  s += E('M600,100 V148');
+  s += T(608, 124, 'HTTP · Host: ecommerce.com', 'ts', 'start');
+
+  // Cluster
+  s += R(15, 130, 1170, 685, 'cluster', 12);
+  s += T(32, 152, 'Minikube cluster', 'th', 'start');
+  s += T(32, 168, 'workloads in namespace ecommerce', 'ts', 'start');
+
+  s += R(930, 150, 240, 40, 'note') + T(1050, 167, 'ConfigMap ecommerce-config', 't') + T(1050, 182, 'PORT · LOG_DIR · *_URL', 'ts');
+  s += R(930, 198, 240, 40, 'note') + T(1050, 215, 'Secret ecommerce-secret', 't') + T(1050, 230, 'MONGO_URI · JWT_SECRET', 'ts');
+
+  s += R(390, 150, 420, 48, 'boxx') + T(600, 170, 'NGINX Ingress Controller', 'tb') +
+       T(600, 188, 'host ecommerce.com · path / → gateway-service:5011', 'ts');
+  s += E('M600,198 V226');
+  s += R(470, 228, 260, 40, 'boxx') + T(600, 245, 'gateway-service', 't') + T(600, 260, 'ClusterIP :5011 → targetPort 5000', 'ts');
+  s += E('M600,268 V298');
+
+  // Gateway deployment
+  s += R(300, 300, 600, 140, 'grp', 10);
+  s += T(316, 320, 'Gateway Deployment · replicas: 2 (each pod looks like this)', 'tb', 'start');
+  s += R(316, 332, 200, 90, 'boxx') + T(416, 358, 'gateway :5000', 't') +
+       T(416, 378, 'verifies JWT + admin role', 'ts') + T(416, 395, 'forwards with axios', 'ts');
+  s += CYL(630, 348, 150, 52, 'vol') + T(630, 375, 'emptyDir /shared-logs', 'ts') + T(630, 391, 'gateway.log', 'tl');
+  s += E('M516,377 H553', 'log') + T(535, 369, 'writes', 'tl');
+  s += R(745, 357, 140, 40, 'side') + T(815, 375, 'log-reader', 't') + T(815, 390, 'busybox:1.36', 'ts');
+  s += E('M705,377 H743', 'log') + T(725, 369, 'tail -F', 'tl');
+
+  // Routing bus
+  const pods = [
+    { name: 'Login Pod',    svc: 'login-service',    port: 5002, route: '/login · public',            job: 'bcrypt check, signs JWT', db: 'find user' },
+    { name: 'Register Pod', svc: 'register-service', port: 5003, route: '/register · public',         job: 'bcrypt hash',            db: 'insert user' },
+    { name: 'Auth Pod',     svc: 'auth-service',     port: 5001, route: '/auth/* · profile: JWT',     job: 'verify JWT, profile',    db: 'read user' },
+    { name: 'Order Pod',    svc: 'order-service',    port: 5004, route: '/orders* · JWT, PUT admin',  job: 're-checks JWT',          db: 'CRUD orders' },
+    { name: 'Product Pod',  svc: 'product-service',  port: 5005, route: '/products* · writes admin',  job: 're-checks JWT on writes', db: 'CRUD products' }
+  ];
+  const X = i => 35 + i * 230, CX = i => X(i) + 105;
+  s += L('M416,422 V475') + L(`M${CX(0)},475 H${CX(4)}`);
+
+  pods.forEach((p, i) => {
+    const x = X(i), cx = CX(i), vx = x + 80, mx = 480 + i * 60;
+    s += E(`M${cx},475 V518`);
+    s += T(cx + 6, 493, p.route, 't', 'start') + T(cx + 6, 508, `→ ${p.svc}:${p.port}`, 'ts', 'start');
+
+    s += R(x, 520, 210, 238, 'grp', 10) + T(x + 12, 539, p.name, 'tb', 'start');
+    s += R(x + 10, 550, 190, 50, 'boxx') + T(x + 105, 570, `${p.svc} :${p.port}`, 't') + T(x + 105, 588, p.job, 'ts');
+
+    s += E(`M${vx},600 V626`, 'log') + T(vx + 6, 618, 'appends', 'tl', 'start');
+    s += CYL(vx, 634, 140, 44, 'vol') + T(vx, 655, 'emptyDir /shared-logs', 'ts') + T(vx, 670, `${p.svc}.log`, 'tl');
+    s += E(`M${vx},686 V710`, 'log') + T(vx + 6, 702, 'tail -F', 'tl', 'start');
+    s += R(x + 10, 712, 140, 32, 'side') + T(vx, 732, 'log-reader (busybox)', 'ts');
+
+    s += E(`M${x + 182},600 V795 L${mx},850`, 'db') + T(x + 176, 788, p.db, 'td', 'end');
+  });
+
+  // MongoDB Atlas
+  s += CYL(600, 856, 300, 50, 'db', 8) + T(600, 884, 'MongoDB Atlas', 'tb') + T(600, 900, 'users · orders · products', 'ts');
+
+  svg.insertAdjacentHTML('beforeend', s);
+})();
+</script>

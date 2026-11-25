@@ -1,0 +1,109 @@
+%% Kubernetes architecture flowchart (matches kubernetes/ manifests).
+%% Paste into mermaid.live, or render:
+%% npx -y @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.png -w 2400 -b white
+flowchart TB
+    Client["Client (Browser / Postman)"]
+    Hosts["Local hosts file (/etc/hosts)<br/>ecommerce.com → Minikube IP"]
+    Ingress["NGINX Ingress Controller<br/>host: ecommerce.com · path: /"]
+
+    Client -->|HTTP Request| Hosts --> Ingress
+
+    subgraph Cluster["Kubernetes Cluster (Minikube) · namespace: ecommerce"]
+        direction TB
+        GwSvc["Gateway Service<br/>ClusterIP :5011 → :5000"]
+
+        subgraph GwPod["API Gateway Pod (replicas: 2)"]
+            direction LR
+            Gw["API Gateway :5000<br/>JWT + admin check"]
+            GwVol[("emptyDir<br/>/shared-logs/gateway.log")]
+            GwSide["Sidecar log-reader<br/>(BusyBox)"]
+            Gw -->|Writes Logs| GwVol -->|Reads & Tails Logs| GwSide
+        end
+
+        GwSvc --> Gw
+
+        subgraph Pods["Microservice Pods (Sidecar Pattern)"]
+            direction LR
+
+            subgraph LoginPod["Login Pod"]
+                direction TB
+                Login["Login :5002"]
+                LoginVol[("emptyDir<br/>/shared-logs/login-service.log")]
+                LoginSide["Sidecar log-reader<br/>(BusyBox)"]
+                Login -->|Writes Logs| LoginVol -->|Reads & Tails Logs| LoginSide
+            end
+
+            subgraph RegisterPod["Register Pod"]
+                direction TB
+                Register["Register :5003"]
+                RegisterVol[("emptyDir<br/>/shared-logs/register-service.log")]
+                RegisterSide["Sidecar log-reader<br/>(BusyBox)"]
+                Register -->|Writes Logs| RegisterVol -->|Reads & Tails Logs| RegisterSide
+            end
+
+            subgraph AuthPod["Auth Pod"]
+                direction TB
+                Auth["Auth :5001"]
+                AuthVol[("emptyDir<br/>/shared-logs/auth-service.log")]
+                AuthSide["Sidecar log-reader<br/>(BusyBox)"]
+                Auth -->|Writes Logs| AuthVol -->|Reads & Tails Logs| AuthSide
+            end
+
+            subgraph OrderPod["Order Pod"]
+                direction TB
+                Order["Order :5004"]
+                OrderVol[("emptyDir<br/>/shared-logs/order-service.log")]
+                OrderSide["Sidecar log-reader<br/>(BusyBox)"]
+                Order -->|Writes Logs| OrderVol -->|Reads & Tails Logs| OrderSide
+            end
+
+            subgraph ProductPod["Product Pod"]
+                direction TB
+                Product["Product :5005"]
+                ProductVol[("emptyDir<br/>/shared-logs/product-service.log")]
+                ProductSide["Sidecar log-reader<br/>(BusyBox)"]
+                Product -->|Writes Logs| ProductVol -->|Reads & Tails Logs| ProductSide
+            end
+        end
+
+        Gw -->|/login| Login
+        Gw -->|/register| Register
+        Gw -->|/auth| Auth
+        Gw -->|/orders| Order
+        Gw -->|/products| Product
+    end
+
+    Ingress --> GwSvc
+
+    Mongo[("MongoDB Atlas<br/>Cloud Database")]
+
+    Login -->|Validate Password| Mongo
+    Register -->|Insert User| Mongo
+    Auth -->|Read / Verify Users| Mongo
+    Order -->|CRUD Orders| Mongo
+    Product -->|CRUD Products| Mongo
+
+    classDef client fill:#e1f5fe,stroke:#0277bd,color:#01579b,font-weight:bold
+    classDef edge fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20,font-weight:bold
+    classDef svc fill:#0288d1,stroke:#01579b,color:#ffffff,font-weight:bold
+    classDef app fill:#ffffff,stroke:#1565c0,color:#0d47a1,font-weight:bold
+    classDef side fill:#f5f7fa,stroke:#78909c,color:#37474f,stroke-dasharray:4 3
+    classDef vol fill:#fff3c4,stroke:#f9a825,color:#6d4c00,font-weight:bold
+    classDef db fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c,font-weight:bold
+
+    class Client client
+    class Hosts,Ingress edge
+    class GwSvc svc
+    class Gw,Login,Register,Auth,Order,Product app
+    class GwSide,LoginSide,RegisterSide,AuthSide,OrderSide,ProductSide side
+    class GwVol,LoginVol,RegisterVol,AuthVol,OrderVol,ProductVol vol
+    class Mongo db
+
+    style Cluster fill:#f8f9fb,stroke:#9e9e9e
+    style Pods fill:#f8f9fb,stroke:#9e9e9e
+    style GwPod fill:#ffffff,stroke:#9e9e9e
+    style LoginPod fill:#ffffff,stroke:#9e9e9e
+    style RegisterPod fill:#ffffff,stroke:#9e9e9e
+    style AuthPod fill:#ffffff,stroke:#9e9e9e
+    style OrderPod fill:#ffffff,stroke:#9e9e9e
+    style ProductPod fill:#ffffff,stroke:#9e9e9e

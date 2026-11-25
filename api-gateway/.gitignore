@@ -1,5 +1,3 @@
-kubectl wait --for=condition=available deployment --all \
-  -n ecommerce --timeout=180snode_modules/
 .env
 .env.*
 !.env.example
